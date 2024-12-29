@@ -1,0 +1,69 @@
+const canvas = document.getElementById('drawingCanvas');
+const ctx = canvas.getContext('2d');
+
+let isDrawing = false;
+
+// بدء الرسم عند الضغط على الماوس
+canvas.addEventListener('mousedown', (e) => {
+    isDrawing = true;
+    ctx.beginPath();
+    ctx.moveTo(e.offsetX, e.offsetY);
+});
+
+// الرسم عند تحريك الماوس
+canvas.addEventListener('mousemove', (e) => {
+    if (isDrawing) {
+        ctx.lineTo(e.offsetX, e.offsetY);
+        ctx.stroke();
+    }
+});
+
+// إنهاء الرسم عند رفع الماوس
+canvas.addEventListener('mouseup', () => {
+    isDrawing = false;
+    saveCanvas(); // حفظ الرسم عند انتهاء السحب
+});
+
+// إنهاء الرسم عند خروج الماوس من اللوحة
+canvas.addEventListener('mouseout', () => {
+    isDrawing = false;
+});
+
+// زر مسح اللوحة
+const clearButton = document.getElementById('clearCanvas');
+clearButton.addEventListener('click', () => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    localStorage.removeItem('drawing'); // إزالة الرسم المحفوظ
+});
+
+// حفظ اللوحة في LocalStorage
+function saveCanvas() {
+    const dataURL = canvas.toDataURL();
+    localStorage.setItem('drawing', dataURL);
+}
+
+// تحميل الرسم المحفوظ من LocalStorage
+function loadCanvas() {
+    const dataURL = localStorage.getItem('drawing');
+    if (dataURL) {
+        const img = new Image();
+        img.src = dataURL;
+        img.onload = () => {
+            ctx.drawImage(img, 0, 0);
+        };
+    }
+}
+
+// تحميل الرسم عند فتح الصفحة
+window.onload = loadCanvas;
+
+// تسجيل الـ Service Worker
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/service-worker.js')
+        .then((registration) => {
+            console.log('Service Worker registered with scope:', registration.scope);
+        })
+        .catch((error) => {
+            console.error('Service Worker registration failed:', error);
+        });
+}
